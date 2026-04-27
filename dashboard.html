@@ -2,356 +2,139 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Trading Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta http-equiv="refresh" content="300">
+<title>AI Trading Signals</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:       #090b0f;
-    --surface:  #0f1218;
-    --border:   #1e2530;
-    --accent:   #00c8ff;
-    --green:    #00ff88;
-    --red:      #ff4455;
-    --yellow:   #ffd000;
-    --text:     #c8d4e0;
-    --dim:      #4a5568;
-    --call:     #00ff88;
-    --put:      #ff4455;
-    --wait:     #ffd000;
+    --bg:#090b0f; --surface:#0f1218; --border:#1e2530;
+    --accent:#00c8ff; --green:#00ff88; --red:#ff4455;
+    --yellow:#ffd000; --text:#c8d4e0; --dim:#4a5568;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 15px;
-    min-height: 100vh;
-  }
-
-  /* SCANLINE OVERLAY */
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text);
+          font-family:'Rajdhani',sans-serif; min-height:100vh; }
   body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg, transparent, transparent 2px,
-      rgba(0,200,255,0.015) 2px, rgba(0,200,255,0.015) 4px
-    );
-    pointer-events: none;
-    z-index: 999;
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:999;
+    background:repeating-linear-gradient(0deg,transparent,transparent 2px,
+      rgba(0,200,255,0.015) 2px,rgba(0,200,255,0.015) 4px);
   }
-
   .header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--accent);
-    padding: 16px 28px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 0 30px rgba(0,200,255,0.08);
+    background:var(--surface); border-bottom:2px solid var(--accent);
+    padding:14px 20px; display:flex; justify-content:space-between;
+    align-items:center; position:sticky; top:0; z-index:100;
+    box-shadow:0 0 30px rgba(0,200,255,0.1);
   }
-  .header h1 {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 20px;
-    color: var(--accent);
-    letter-spacing: 3px;
-    text-transform: uppercase;
-  }
-  .header .gen-time {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 12px;
-    color: var(--dim);
-  }
+  .header h1 { font-family:'Share Tech Mono',monospace; font-size:18px;
+                color:var(--accent); letter-spacing:3px; }
+  .header-right { text-align:right; }
+  .gen-time { font-family:'Share Tech Mono',monospace; font-size:10px;
+               color:var(--dim); display:block; }
+  .refresh-note { font-family:'Share Tech Mono',monospace; font-size:9px;
+                   color:var(--dim); margin-top:2px; }
 
-  .grid {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    grid-template-rows: auto auto;
-    gap: 16px;
-    padding: 20px 28px;
-    max-width: 1600px;
-    margin: 0 auto;
-  }
+  .page { padding:16px; max-width:1400px; margin:0 auto; }
 
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-  .card-header {
-    padding: 10px 16px;
-    background: rgba(0,200,255,0.06);
-    border-bottom: 1px solid var(--border);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 2px;
-    color: var(--accent);
-    text-transform: uppercase;
-  }
-  .card-body { padding: 16px; }
+  .card { background:var(--surface); border:1px solid var(--border);
+           border-radius:4px; overflow:hidden; margin-bottom:16px; }
+  .card-header { padding:10px 16px; background:rgba(0,200,255,0.06);
+                  border-bottom:1px solid var(--border);
+                  font-family:'Share Tech Mono',monospace; font-size:10px;
+                  letter-spacing:2px; color:var(--accent); text-transform:uppercase; }
 
-  /* ACCOUNT CARD */
-  .account-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-  .stat-box {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    padding: 10px 14px;
-  }
-  .stat-label {
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    color: var(--dim);
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-  .stat-value {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 18px;
-    color: #fff;
-  }
-  .stat-value.accent { color: var(--accent); }
-  .stat-value.green  { color: var(--green); }
-  .stat-value.red    { color: var(--red); }
+  .table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  table { width:100%; border-collapse:collapse; min-width:700px; }
+  th { text-align:left; padding:8px 10px; font-size:9px; letter-spacing:1.5px;
+        color:var(--dim); text-transform:uppercase;
+        border-bottom:1px solid var(--border); white-space:nowrap; }
+  td { padding:10px 10px; border-bottom:1px solid rgba(30,37,48,0.5);
+        font-family:'Share Tech Mono',monospace; font-size:13px; white-space:nowrap; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(0,200,255,0.04); }
+  .tc { color:#fff; font-weight:700; font-size:14px; letter-spacing:1px; }
+  .pos { color:var(--green); }
+  .neg { color:var(--red); }
 
-  /* TABLES */
-  table { width: 100%; border-collapse: collapse; }
-  th {
-    text-align: left;
-    padding: 8px 10px;
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    color: var(--dim);
-    text-transform: uppercase;
-    border-bottom: 1px solid var(--border);
-    font-weight: 600;
-  }
-  td {
-    padding: 9px 10px;
-    border-bottom: 1px solid rgba(30,37,48,0.6);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 13px;
-  }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(0,200,255,0.03); }
-  .ticker-cell { color: #fff; font-weight: 600; letter-spacing: 1px; }
-  .pos { color: var(--green); }
-  .neg { color: var(--red); }
-  .empty { color: var(--dim); font-style: italic; text-align: center; padding: 20px; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:2px;
+            font-size:11px; font-weight:700; letter-spacing:1px;
+            font-family:'Share Tech Mono',monospace; }
+  .badge.call { background:rgba(0,255,136,0.15); color:var(--green);
+                 border:1px solid rgba(0,255,136,0.3); }
+  .badge.put  { background:rgba(255,68,85,0.15);  color:var(--red);
+                 border:1px solid rgba(255,68,85,0.3); }
+  .badge.wait { background:rgba(255,208,0,0.12);  color:var(--yellow);
+                 border:1px solid rgba(255,208,0,0.3); }
 
-  /* BADGES */
-  .badge {
-    display: inline-block;
-    padding: 2px 10px;
-    border-radius: 2px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    font-family: 'Share Tech Mono', monospace;
-  }
-  .badge.call { background: rgba(0,255,136,0.15); color: var(--green); border: 1px solid rgba(0,255,136,0.3); }
-  .badge.put  { background: rgba(255,68,85,0.15);  color: var(--red);   border: 1px solid rgba(255,68,85,0.3); }
-  .badge.wait { background: rgba(255,208,0,0.12);  color: var(--yellow);border: 1px solid rgba(255,208,0,0.3); }
-  .badge.win  { background: rgba(0,255,136,0.15); color: var(--green); border: 1px solid rgba(0,255,136,0.3); }
-  .badge.loss { background: rgba(255,68,85,0.15);  color: var(--red);   border: 1px solid rgba(255,68,85,0.3); }
-  .badge.be   { background: rgba(255,208,0,0.12);  color: var(--yellow);border: 1px solid rgba(255,208,0,0.3); }
+  .score-bull { color:var(--green); }
+  .score-bear { color:var(--red); }
 
-  /* WIN RATE BAR */
-  .wr-bar-bg {
-    background: rgba(255,255,255,0.06);
-    border-radius: 2px;
-    height: 6px;
-    margin-top: 6px;
-    overflow: hidden;
-  }
-  .wr-bar-fill {
-    height: 100%;
-    border-radius: 2px;
-    background: #ff4455;
-    width: 0%;
-    transition: width 1s ease;
-  }
+  /* SPY highlight */
+  tr:first-child td { background:rgba(0,200,255,0.04); }
+  tr:first-child .tc { color:var(--accent); }
 
-  /* LAYOUT SPECIFICS */
-  .sidebar {
-    grid-column: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  /* Summary row */
+  .summary-bar {
+    display:flex; gap:12px; flex-wrap:wrap;
+    padding:12px 16px; border-bottom:1px solid var(--border);
   }
-  .main-content {
-    grid-column: 2;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  .sum-item {
+    background:rgba(255,255,255,0.03); border:1px solid var(--border);
+    border-radius:3px; padding:8px 14px; flex:1; min-width:80px;
+    text-align:center;
   }
-  .full-width { grid-column: 1 / -1; }
+  .sum-label { font-size:9px; letter-spacing:1.5px; color:var(--dim);
+                text-transform:uppercase; margin-bottom:4px; }
+  .sum-val { font-family:'Share Tech Mono',monospace; font-size:20px; }
 
-  /* DISCIPLINE */
-  .rule-list { list-style: none; padding: 0; }
-  .rule-list li {
-    padding: 7px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 13px;
-    color: var(--text);
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
-  .rule-list li::before {
-    content: '✓';
-    color: var(--green);
-    font-size: 12px;
-    flex-shrink: 0;
-  }
-  .rule-list li:last-child { border-bottom: none; }
+  .rules { padding:14px 16px; }
+  .rule { padding:8px 0; border-bottom:1px solid var(--border);
+           font-size:14px; display:flex; gap:10px; align-items:center; }
+  .rule:last-child { border-bottom:none; }
+  .rule::before { content:'✓'; color:var(--green); flex-shrink:0; font-size:12px; }
 
-  /* FOOTER */
-  .footer {
-    text-align: center;
-    padding: 20px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    color: var(--dim);
-    border-top: 1px solid var(--border);
-    margin-top: 8px;
-  }
+  .footer { text-align:center; padding:20px;
+             font-family:'Share Tech Mono',monospace; font-size:10px;
+             color:var(--dim); border-top:1px solid var(--border); }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>⚡ AI TRADING DASHBOARD</h1>
-  <span class="gen-time">Generated: Sunday, April 26, 2026  07:33 PM</span>
+  <h1>⚡ AI TRADING SIGNALS</h1>
+  <div class="header-right">
+    <span class="gen-time">Sunday, April 26, 2026  08:32 PM</span>
+    <span class="refresh-note">Auto-refreshes every 5 min</span>
+  </div>
 </div>
 
-<div class="grid">
+<div class="page">
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-
-    <!-- ACCOUNT -->
-    <div class="card">
-      <div class="card-header">Webull Account</div>
-      <div class="card-body">
-        <div class="account-grid">
-          <div class="stat-box">
-            <div class="stat-label">Total Value</div>
-            <div class="stat-value accent">$1,748.90</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">Cash</div>
-            <div class="stat-value">$1,664.45</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">Market Value</div>
-            <div class="stat-value">$84.45</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">Buying Power</div>
-            <div class="stat-value">$1,664.45</div>
-          </div>
-        </div>
-        <div class="account-grid">
-          <div class="stat-box">
-            <div class="stat-label">Open P&L</div>
-            <div class="stat-value green">+$14.19 +0.82%</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">Day P&L</div>
-            <div class="stat-value green">+$0.00</div>
-          </div>
-        </div>
-      </div>
+  <!-- SIGNAL SUMMARY -->
+  <div class="card">
+    <div class="summary-bar" id="summary-bar">
+      <!-- filled by JS -->
     </div>
+  </div>
 
-    <!-- POSITIONS -->
-    <div class="card">
-      <div class="card-header">Open Positions</div>
-      <table>
-        <thead>
-          <tr>
-            <th>Ticker</th><th>Qty</th><th>Cost</th>
-            <th>Last</th><th>Val</th><th>P&L</th><th>%</th>
-          </tr>
-        </thead>
-        <tbody>
-        <tr>
-          <td class="ticker-cell">GORO</td>
-          <td>50</td>
-          <td>$1.41</td>
-          <td>$1.69</td>
-          <td>$84.45</td>
-          <td class="pos">+$14.19</td>
-          <td class="pos">+20.00%</td>
-        </tr></tbody>
-      </table>
-    </div>
-
-    <!-- JOURNAL -->
-    <div class="card">
-      <div class="card-header">Journal Performance</div>
-      <div class="card-body">
-        <div class="account-grid" style="grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px;">
-          <div class="stat-box">
-            <div class="stat-label">Trades</div>
-            <div class="stat-value" style="font-size:22px">0</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">Wins</div>
-            <div class="stat-value green" style="font-size:22px">0</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">Win Rate</div>
-            <div class="stat-value" style="font-size:22px; color:#ff4455">0%</div>
-          </div>
-        </div>
-        <div class="wr-bar-bg"><div class="wr-bar-fill"></div></div>
-      </div>
-      <table>
-        <thead><tr><th>Date</th><th>Ticker</th><th>P&L%</th><th>Result</th></tr></thead>
-        <tbody><tr><td colspan="4" class="empty">No trades logged yet</td></tr></tbody>
-      </table>
-    </div>
-
-    <!-- DISCIPLINE -->
-    <div class="card">
-      <div class="card-header">Discipline Rules</div>
-      <div class="card-body">
-        <ul class="rule-list">
-          <li>No confirmation = no trade</li>
-          <li>Max 3 open positions at once</li>
-          <li>Never risk more than 5% per trade</li>
-          <li>WAIT is a valid signal</li>
-          <li>Check SPY direction FIRST</li>
-        </ul>
-      </div>
-    </div>
-
-  </div><!-- /sidebar -->
-
-  <!-- MAIN CONTENT -->
-  <div class="main-content">
-    <div class="card">
-      <div class="card-header">Watchlist — Signals + Prices</div>
+  <!-- WATCHLIST TABLE -->
+  <div class="card">
+    <div class="card-header">Watchlist — 15 Tickers</div>
+    <div class="table-wrap">
       <table>
         <thead>
           <tr>
             <th>Ticker</th><th>Price</th><th>Chg%</th>
             <th>High</th><th>Low</th><th>Signal</th>
-            <th>Strength</th><th>RSI</th><th>Target</th>
+            <th>Strength</th><th>RSI</th>
+            <th>EMA9</th><th>EMA20</th>
+            <th>Target</th><th>Score</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="watchlist-tbody">
+
         <tr>
-          <td class="ticker-cell">SPY</td>
+          <td class="tc">SPY</td>
           <td>$713.94</td>
           <td class="pos">▲ 0.62%</td>
           <td>$714.47</td>
@@ -359,10 +142,13 @@
           <td><span class="badge call">CALL</span></td>
           <td>MODERATE</td>
           <td>76.7</td>
+          <td>$703.25</td>
+          <td>$690.14</td>
           <td>$714.47</td>
+          <td><span class="score-bull">3</span> / <span class="score-bear">1</span></td>
         </tr>
         <tr>
-          <td class="ticker-cell">QQQ</td>
+          <td class="tc">QQQ</td>
           <td>$663.88</td>
           <td class="pos">▲ 1.32%</td>
           <td>$664.51</td>
@@ -370,10 +156,13 @@
           <td><span class="badge call">CALL</span></td>
           <td>MODERATE</td>
           <td>82.5</td>
+          <td>$644.32</td>
+          <td>$626.91</td>
           <td>$664.51</td>
+          <td><span class="score-bull">3</span> / <span class="score-bear">1</span></td>
         </tr>
         <tr>
-          <td class="ticker-cell">SOFI</td>
+          <td class="tc">SOFI</td>
           <td>$18.44</td>
           <td class="neg">▼ 0.11%</td>
           <td>$18.58</td>
@@ -381,10 +170,13 @@
           <td><span class="badge call">CALL</span></td>
           <td>MODERATE</td>
           <td>55.6</td>
+          <td>$18.44</td>
+          <td>$17.94</td>
           <td>$23.36</td>
+          <td><span class="score-bull">3</span> / <span class="score-bear">0</span></td>
         </tr>
         <tr>
-          <td class="ticker-cell">RGTI</td>
+          <td class="tc">RGTI</td>
           <td>$16.61</td>
           <td class="neg">▼ 2.52%</td>
           <td>$17.15</td>
@@ -392,10 +184,13 @@
           <td><span class="badge call">CALL</span></td>
           <td>MODERATE</td>
           <td>44.4</td>
+          <td>$17.48</td>
+          <td>$16.83</td>
           <td>$20.09</td>
+          <td><span class="score-bull">3</span> / <span class="score-bear">0</span></td>
         </tr>
         <tr>
-          <td class="ticker-cell">NVDA</td>
+          <td class="tc">NVDA</td>
           <td>$208.27</td>
           <td class="pos">▲ 4.40%</td>
           <td>$210.95</td>
@@ -403,10 +198,13 @@
           <td><span class="badge call">CALL</span></td>
           <td>MODERATE</td>
           <td>78.2</td>
+          <td>$199.54</td>
+          <td>$192.81</td>
           <td>$210.95</td>
+          <td><span class="score-bull">3</span> / <span class="score-bear">1</span></td>
         </tr>
         <tr>
-          <td class="ticker-cell">MARA</td>
+          <td class="tc">MARA</td>
           <td>$11.64</td>
           <td class="neg">▼ 2.35%</td>
           <td>$12.1</td>
@@ -414,10 +212,13 @@
           <td><span class="badge call">CALL</span></td>
           <td>MODERATE</td>
           <td>71.1</td>
+          <td>$11.24</td>
+          <td>$10.44</td>
           <td>$12.12</td>
+          <td><span class="score-bull">3</span> / <span class="score-bear">1</span></td>
         </tr>
         <tr>
-          <td class="ticker-cell">RIOT</td>
+          <td class="tc">RIOT</td>
           <td>$18.61</td>
           <td class="pos">▲ 1.20%</td>
           <td>$19.07</td>
@@ -425,10 +226,13 @@
           <td><span class="badge call">CALL</span></td>
           <td>MODERATE</td>
           <td>67.7</td>
+          <td>$17.75</td>
+          <td>$16.7</td>
           <td>$18.91</td>
+          <td><span class="score-bull">3</span> / <span class="score-bear">0</span></td>
         </tr>
         <tr>
-          <td class="ticker-cell">HIMS</td>
+          <td class="tc">HIMS</td>
           <td>$30.56</td>
           <td class="pos">▲ 8.45%</td>
           <td>$31.33</td>
@@ -436,10 +240,13 @@
           <td><span class="badge call">CALL</span></td>
           <td>MODERATE</td>
           <td>73.1</td>
+          <td>$27.66</td>
+          <td>$25.1</td>
           <td>$31.33</td>
+          <td><span class="score-bull">3</span> / <span class="score-bear">1</span></td>
         </tr>
         <tr>
-          <td class="ticker-cell">IWM</td>
+          <td class="tc">IWM</td>
           <td>$276.65</td>
           <td class="pos">▲ 0.40%</td>
           <td>$278.13</td>
@@ -447,21 +254,27 @@
           <td><span class="badge call">CALL</span></td>
           <td>MODERATE</td>
           <td>75.3</td>
+          <td>$272.7</td>
+          <td>$266.21</td>
           <td>$278.01</td>
+          <td><span class="score-bull">3</span> / <span class="score-bear">1</span></td>
         </tr>
         <tr>
-          <td class="ticker-cell">DOW</td>
+          <td class="tc">DOW</td>
           <td>$38.66</td>
           <td class="pos">▲ 0.03%</td>
           <td>$39.49</td>
           <td>$37.93</td>
           <td><span class="badge wait">WAIT</span></td>
-          <td>NO CLEAR E</td>
+          <td>NO CLEAR</td>
           <td>50.5</td>
+          <td>$38.5</td>
+          <td>$38.46</td>
           <td>-</td>
+          <td><span class="score-bull">1</span> / <span class="score-bear">2</span></td>
         </tr>
         <tr>
-          <td class="ticker-cell">TSLL</td>
+          <td class="tc">TSLL</td>
           <td>$12.17</td>
           <td class="pos">▲ 1.59%</td>
           <td>$12.58</td>
@@ -469,10 +282,13 @@
           <td><span class="badge call">CALL</span></td>
           <td>MODERATE</td>
           <td>47.1</td>
+          <td>$12.44</td>
+          <td>$12.4</td>
           <td>$17.3</td>
+          <td><span class="score-bull">3</span> / <span class="score-bear">0</span></td>
         </tr>
         <tr>
-          <td class="ticker-cell">SQQQ</td>
+          <td class="tc">SQQQ</td>
           <td>$52.5</td>
           <td class="neg">▼ 4.04%</td>
           <td>$54.43</td>
@@ -480,10 +296,13 @@
           <td><span class="badge put">PUT</span></td>
           <td>MODERATE</td>
           <td>18.1</td>
+          <td>$57.95</td>
+          <td>$63.58</td>
           <td>$52.37</td>
+          <td><span class="score-bull">1</span> / <span class="score-bear">3</span></td>
         </tr>
         <tr>
-          <td class="ticker-cell">BBAI</td>
+          <td class="tc">BBAI</td>
           <td>$3.7</td>
           <td class="neg">▼ 2.12%</td>
           <td>$3.82</td>
@@ -491,10 +310,13 @@
           <td><span class="badge call">CALL</span></td>
           <td>MODERATE</td>
           <td>50.4</td>
+          <td>$3.73</td>
+          <td>$3.68</td>
           <td>$5.07</td>
+          <td><span class="score-bull">3</span> / <span class="score-bear">0</span></td>
         </tr>
         <tr>
-          <td class="ticker-cell">CONY</td>
+          <td class="tc">CONY</td>
           <td>$28.2</td>
           <td class="pos">▲ 0.18%</td>
           <td>$28.42</td>
@@ -502,10 +324,13 @@
           <td><span class="badge call">CALL</span></td>
           <td>MODERATE</td>
           <td>58.5</td>
+          <td>$27.74</td>
+          <td>$26.98</td>
           <td>$29.43</td>
+          <td><span class="score-bull">3</span> / <span class="score-bear">0</span></td>
         </tr>
         <tr>
-          <td class="ticker-cell">WULF</td>
+          <td class="tc">WULF</td>
           <td>$20.01</td>
           <td class="neg">▼ 2.86%</td>
           <td>$21.6</td>
@@ -513,17 +338,61 @@
           <td><span class="badge call">CALL</span></td>
           <td>MODERATE</td>
           <td>58.5</td>
+          <td>$19.84</td>
+          <td>$18.7</td>
           <td>$21.34</td>
-        </tr></tbody>
+          <td><span class="score-bull">3</span> / <span class="score-bear">0</span></td>
+        </tr>
+        </tbody>
       </table>
     </div>
-  </div><!-- /main -->
+  </div>
 
-</div><!-- /grid -->
+  <!-- DISCIPLINE -->
+  <div class="card">
+    <div class="card-header">Discipline Rules</div>
+    <div class="rules">
+      <div class="rule">No confirmation = no trade</div>
+      <div class="rule">Max 3 open positions at once</div>
+      <div class="rule">Never risk more than 5% per trade</div>
+      <div class="rule">WAIT is a valid signal — not a failure</div>
+      <div class="rule">Check SPY direction FIRST before any trade</div>
+      <div class="rule">Define your stop BEFORE entering</div>
+      <div class="rule">Do not chase extended RSI (above 75)</div>
+    </div>
+  </div>
 
-<div class="footer">
-  AI TRADING ASSISTANT — Sunday, April 26, 2026  07:33 PM — Refresh by running: python dashboard_generator.py
 </div>
 
+<div class="footer">
+  AI Trading Assistant — Updated: Sunday, April 26, 2026  08:32 PM — Run push_dashboard.py to refresh
+</div>
+
+<script>
+// Build signal summary counts
+const rows = document.querySelectorAll('#watchlist-tbody tr');
+let calls = 0, puts = 0, waits = 0, strong = 0;
+rows.forEach(r => {
+  const sig = r.querySelector('.badge');
+  if (!sig) return;
+  if (sig.classList.contains('call')) calls++;
+  else if (sig.classList.contains('put')) puts++;
+  else waits++;
+  if (r.cells[6] && r.cells[6].textContent.includes('STRONG')) strong++;
+});
+const bar = document.getElementById('summary-bar');
+bar.innerHTML = `
+  <div class="sum-item"><div class="sum-label">CALL</div>
+    <div class="sum-val" style="color:var(--green)">${calls}</div></div>
+  <div class="sum-item"><div class="sum-label">PUT</div>
+    <div class="sum-val" style="color:var(--red)">${puts}</div></div>
+  <div class="sum-item"><div class="sum-label">WAIT</div>
+    <div class="sum-val" style="color:var(--yellow)">${waits}</div></div>
+  <div class="sum-item"><div class="sum-label">STRONG</div>
+    <div class="sum-val" style="color:var(--accent)">${strong}</div></div>
+  <div class="sum-item"><div class="sum-label">TICKERS</div>
+    <div class="sum-val">15</div></div>
+`;
+</script>
 </body>
 </html>
