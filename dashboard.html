@@ -2,396 +2,362 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta http-equiv="refresh" content="300">
-<title>AI Trading Signals</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>AI Trading Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:#090b0f; --surface:#0f1218; --border:#1e2530;
-    --accent:#00c8ff; --green:#00ff88; --red:#ff4455;
-    --yellow:#ffd000; --text:#c8d4e0; --dim:#4a5568;
-  }
-  * { box-sizing:border-box; margin:0; padding:0; }
-  body { background:var(--bg); color:var(--text);
-          font-family:'Rajdhani',sans-serif; min-height:100vh; }
-  body::before {
-    content:''; position:fixed; inset:0; pointer-events:none; z-index:999;
+  :root{--bg:#090b0f;--surface:#0f1218;--border:#1e2530;--accent:#00c8ff;
+         --green:#00ff88;--red:#ff4455;--yellow:#ffd000;--text:#c8d4e0;--dim:#4a5568;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;}
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;
     background:repeating-linear-gradient(0deg,transparent,transparent 2px,
-      rgba(0,200,255,0.015) 2px,rgba(0,200,255,0.015) 4px);
-  }
-  .header {
-    background:var(--surface); border-bottom:2px solid var(--accent);
-    padding:14px 20px; display:flex; justify-content:space-between;
-    align-items:center; position:sticky; top:0; z-index:100;
-    box-shadow:0 0 30px rgba(0,200,255,0.1);
-  }
-  .header h1 { font-family:'Share Tech Mono',monospace; font-size:18px;
-                color:var(--accent); letter-spacing:3px; }
-  .header-right { text-align:right; }
-  .gen-time { font-family:'Share Tech Mono',monospace; font-size:10px;
-               color:var(--dim); display:block; }
-  .refresh-note { font-family:'Share Tech Mono',monospace; font-size:9px;
-                   color:var(--dim); margin-top:2px; }
+    rgba(0,200,255,0.015) 2px,rgba(0,200,255,0.015) 4px);}
 
-  .page { padding:16px; max-width:1400px; margin:0 auto; }
+  .header{background:var(--surface);border-bottom:2px solid var(--accent);
+    padding:12px 16px;display:flex;justify-content:space-between;align-items:center;
+    position:sticky;top:0;z-index:100;box-shadow:0 0 20px rgba(0,200,255,0.1);}
+  .header h1{font-family:'Share Tech Mono',monospace;font-size:16px;
+              color:var(--accent);letter-spacing:3px;}
+  .gen-time{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim);}
 
-  .card { background:var(--surface); border:1px solid var(--border);
-           border-radius:4px; overflow:hidden; margin-bottom:16px; }
-  .card-header { padding:10px 16px; background:rgba(0,200,255,0.06);
-                  border-bottom:1px solid var(--border);
-                  font-family:'Share Tech Mono',monospace; font-size:10px;
-                  letter-spacing:2px; color:var(--accent); text-transform:uppercase; }
+  .page{padding:12px;max-width:1400px;margin:0 auto;}
 
-  .table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-  table { width:100%; border-collapse:collapse; min-width:700px; }
-  th { text-align:left; padding:8px 10px; font-size:9px; letter-spacing:1.5px;
-        color:var(--dim); text-transform:uppercase;
-        border-bottom:1px solid var(--border); white-space:nowrap; }
-  td { padding:10px 10px; border-bottom:1px solid rgba(30,37,48,0.5);
-        font-family:'Share Tech Mono',monospace; font-size:13px; white-space:nowrap; }
-  tr:last-child td { border-bottom:none; }
-  tr:hover td { background:rgba(0,200,255,0.04); }
-  .tc { color:#fff; font-weight:700; font-size:14px; letter-spacing:1px; }
-  .pos { color:var(--green); }
-  .neg { color:var(--red); }
+  .tabs{display:flex;gap:4px;margin-bottom:12px;overflow-x:auto;}
+  .tab{background:var(--surface);border:1px solid var(--border);color:var(--dim);
+    font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;
+    padding:8px 16px;border-radius:2px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+  .tab.active{border-color:var(--accent);color:var(--accent);background:rgba(0,200,255,0.08);}
 
-  .badge { display:inline-block; padding:3px 10px; border-radius:2px;
-            font-size:11px; font-weight:700; letter-spacing:1px;
-            font-family:'Share Tech Mono',monospace; }
-  .badge.call { background:rgba(0,255,136,0.15); color:var(--green);
-                 border:1px solid rgba(0,255,136,0.3); }
-  .badge.put  { background:rgba(255,68,85,0.15);  color:var(--red);
-                 border:1px solid rgba(255,68,85,0.3); }
-  .badge.wait { background:rgba(255,208,0,0.12);  color:var(--yellow);
-                 border:1px solid rgba(255,208,0,0.3); }
+  .panel{display:none;}.panel.active{display:block;}
 
-  .score-bull { color:var(--green); }
-  .score-bear { color:var(--red); }
+  .card{background:var(--surface);border:1px solid var(--border);
+    border-radius:4px;overflow:hidden;margin-bottom:12px;}
+  .card-header{padding:8px 14px;background:rgba(0,200,255,0.06);
+    border-bottom:1px solid var(--border);font-family:'Share Tech Mono',monospace;
+    font-size:10px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;}
 
-  /* SPY highlight */
-  tr:first-child td { background:rgba(0,200,255,0.04); }
-  tr:first-child .tc { color:var(--accent); }
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+    gap:8px;padding:12px;}
+  .stat-box{background:rgba(255,255,255,0.03);border:1px solid var(--border);
+    border-radius:3px;padding:10px 12px;}
+  .stat-label{font-size:9px;letter-spacing:1.5px;color:var(--dim);
+    text-transform:uppercase;margin-bottom:4px;}
+  .stat-value{font-family:'Share Tech Mono',monospace;font-size:20px;color:#fff;}
+  .stat-value.accent{color:var(--accent);}
+  .stat-value.green{color:var(--green);}
+  .stat-value.red{color:var(--red);}
 
-  /* Summary row */
-  .summary-bar {
-    display:flex; gap:12px; flex-wrap:wrap;
-    padding:12px 16px; border-bottom:1px solid var(--border);
-  }
-  .sum-item {
-    background:rgba(255,255,255,0.03); border:1px solid var(--border);
-    border-radius:3px; padding:8px 14px; flex:1; min-width:80px;
-    text-align:center;
-  }
-  .sum-label { font-size:9px; letter-spacing:1.5px; color:var(--dim);
-                text-transform:uppercase; margin-bottom:4px; }
-  .sum-val { font-family:'Share Tech Mono',monospace; font-size:20px; }
+  .wr-wrap{padding:0 12px 12px;}
+  .wr-bg{background:rgba(255,255,255,0.06);border-radius:2px;height:5px;overflow:hidden;}
+  .wr-fill{height:100%;border-radius:2px;background:#ff4455;width:0%;transition:width 1s;}
 
-  .rules { padding:14px 16px; }
-  .rule { padding:8px 0; border-bottom:1px solid var(--border);
-           font-size:14px; display:flex; gap:10px; align-items:center; }
-  .rule:last-child { border-bottom:none; }
-  .rule::before { content:'✓'; color:var(--green); flex-shrink:0; font-size:12px; }
+  .summary-bar{display:flex;gap:8px;flex-wrap:wrap;padding:12px;border-bottom:1px solid var(--border);}
+  .sum-item{background:rgba(255,255,255,0.03);border:1px solid var(--border);
+    border-radius:3px;padding:8px 14px;flex:1;min-width:70px;text-align:center;}
+  .sum-label{font-size:9px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-bottom:4px;}
+  .sum-val{font-family:'Share Tech Mono',monospace;font-size:18px;}
 
-  .footer { text-align:center; padding:20px;
-             font-family:'Share Tech Mono',monospace; font-size:10px;
-             color:var(--dim); border-top:1px solid var(--border); }
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  table{width:100%;border-collapse:collapse;min-width:400px;}
+  th{text-align:left;padding:7px 10px;font-size:9px;letter-spacing:1.5px;color:var(--dim);
+    text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap;}
+  td{padding:9px 10px;border-bottom:1px solid rgba(30,37,48,0.5);
+    font-family:'Share Tech Mono',monospace;font-size:12px;white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(0,200,255,0.03);}
+  .tc{color:#fff;font-weight:700;letter-spacing:1px;font-size:13px;}
+  .pos{color:var(--green);}.neg{color:var(--red);}
+  .empty{color:var(--dim);font-style:italic;text-align:center;padding:24px;}
+  .gb{color:var(--green);}.rb{color:var(--red);}
+
+  .badge{display:inline-block;padding:2px 8px;border-radius:2px;font-size:10px;
+    font-weight:700;letter-spacing:1px;font-family:'Share Tech Mono',monospace;}
+  .badge.call{background:rgba(0,255,136,0.15);color:var(--green);border:1px solid rgba(0,255,136,0.3);}
+  .badge.put{background:rgba(255,68,85,0.15);color:var(--red);border:1px solid rgba(255,68,85,0.3);}
+  .badge.wait{background:rgba(255,208,0,0.12);color:var(--yellow);border:1px solid rgba(255,208,0,0.3);}
+
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:600px){.two-col{grid-template-columns:1fr;}}
+
+  .rules{padding:12px;}
+  .rule{padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;
+    display:flex;gap:10px;align-items:center;}
+  .rule:last-child{border-bottom:none;}
+  .rule::before{content:'✓';color:var(--green);flex-shrink:0;font-size:12px;}
+
+  .footer{text-align:center;padding:16px;font-family:'Share Tech Mono',monospace;
+    font-size:10px;color:var(--dim);border-top:1px solid var(--border);}
 </style>
 </head>
 <body>
-
 <div class="header">
-  <h1>⚡ AI TRADING SIGNALS</h1>
-  <div class="header-right">
-    <span class="gen-time">Sunday, April 26, 2026  08:32 PM</span>
-    <span class="refresh-note">Auto-refreshes every 5 min</span>
-  </div>
+  <h1>⚡ AI TRADING</h1>
+  <span class="gen-time">Tuesday, April 28, 2026  07:29 PM</span>
 </div>
 
 <div class="page">
-
-  <!-- SIGNAL SUMMARY -->
-  <div class="card">
-    <div class="summary-bar" id="summary-bar">
-      <!-- filled by JS -->
-    </div>
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('signals')">SIGNALS</div>
+    <div class="tab" onclick="showTab('journal')">JOURNAL</div>
+    <div class="tab" onclick="showTab('stats')">STATS</div>
+    <div class="tab" onclick="showTab('rules')">RULES</div>
   </div>
 
-  <!-- WATCHLIST TABLE -->
-  <div class="card">
-    <div class="card-header">Watchlist — 15 Tickers</div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Ticker</th><th>Price</th><th>Chg%</th>
-            <th>High</th><th>Low</th><th>Signal</th>
-            <th>Strength</th><th>RSI</th>
-            <th>EMA9</th><th>EMA20</th>
-            <th>Target</th><th>Score</th>
-          </tr>
-        </thead>
-        <tbody id="watchlist-tbody">
-
-        <tr>
-          <td class="tc">SPY</td>
-          <td>$713.94</td>
-          <td class="pos">▲ 0.62%</td>
-          <td>$714.47</td>
-          <td>$709.01</td>
+  <!-- SIGNALS -->
+  <div class="panel active" id="panel-signals">
+    <div class="card">
+      <div class="summary-bar" id="sum-bar"></div>
+    </div>
+    <div class="card">
+      <div class="card-header">Watchlist — 15 Tickers</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Ticker</th><th>Price</th><th>Chg%</th><th>High</th><th>Low</th>
+            <th>Signal</th><th>Strength</th><th>RSI</th><th>EMA9</th><th>EMA20</th>
+            <th>Target</th><th>Score</th></tr></thead>
+          <tbody><tr>
+          <td class="tc">SPY</td><td>$711.69</td>
+          <td class="neg">▼ 0.64%</td>
+          <td>$712.88</td><td>$709.25</td>
           <td><span class="badge call">CALL</span></td>
-          <td>MODERATE</td>
-          <td>76.7</td>
-          <td>$703.25</td>
-          <td>$690.14</td>
-          <td>$714.47</td>
-          <td><span class="score-bull">3</span> / <span class="score-bear">1</span></td>
-        </tr>
-        <tr>
-          <td class="tc">QQQ</td>
-          <td>$663.88</td>
-          <td class="pos">▲ 1.32%</td>
-          <td>$664.51</td>
-          <td>$656.53</td>
+          <td>MODERATE</td><td>69.4</td>
+          <td>$706.84</td><td>$694.35</td><td>$712.88</td>
+          <td><span class="gb">3</span>/<span class="rb">0</span></td>
+        </tr><tr>
+          <td class="tc">QQQ</td><td>$657.55</td>
+          <td class="neg">▼ 1.17%</td>
+          <td>$659.64</td><td>$653.81</td>
           <td><span class="badge call">CALL</span></td>
-          <td>MODERATE</td>
-          <td>82.5</td>
-          <td>$644.32</td>
-          <td>$626.91</td>
-          <td>$664.51</td>
-          <td><span class="score-bull">3</span> / <span class="score-bear">1</span></td>
-        </tr>
-        <tr>
-          <td class="tc">SOFI</td>
-          <td>$18.44</td>
-          <td class="neg">▼ 0.11%</td>
-          <td>$18.58</td>
-          <td>$18.17</td>
+          <td>MODERATE</td><td>70.5</td>
+          <td>$650.15</td><td>$633.04</td><td>$659.64</td>
+          <td><span class="gb">3</span>/<span class="rb">1</span></td>
+        </tr><tr>
+          <td class="tc">SOFI</td><td>$18.36</td>
+          <td class="neg">▼ 3.11%</td>
+          <td>$18.87</td><td>$18.27</td>
           <td><span class="badge call">CALL</span></td>
-          <td>MODERATE</td>
-          <td>55.6</td>
-          <td>$18.44</td>
-          <td>$17.94</td>
-          <td>$23.36</td>
-          <td><span class="score-bull">3</span> / <span class="score-bear">0</span></td>
-        </tr>
-        <tr>
-          <td class="tc">RGTI</td>
-          <td>$16.61</td>
-          <td class="neg">▼ 2.52%</td>
-          <td>$17.15</td>
-          <td>$16.1</td>
-          <td><span class="badge call">CALL</span></td>
-          <td>MODERATE</td>
-          <td>44.4</td>
-          <td>$17.48</td>
-          <td>$16.83</td>
-          <td>$20.09</td>
-          <td><span class="score-bull">3</span> / <span class="score-bear">0</span></td>
-        </tr>
-        <tr>
-          <td class="tc">NVDA</td>
-          <td>$208.27</td>
-          <td class="pos">▲ 4.40%</td>
-          <td>$210.95</td>
-          <td>$199.81</td>
-          <td><span class="badge call">CALL</span></td>
-          <td>MODERATE</td>
-          <td>78.2</td>
-          <td>$199.54</td>
-          <td>$192.81</td>
-          <td>$210.95</td>
-          <td><span class="score-bull">3</span> / <span class="score-bear">1</span></td>
-        </tr>
-        <tr>
-          <td class="tc">MARA</td>
-          <td>$11.64</td>
-          <td class="neg">▼ 2.35%</td>
-          <td>$12.1</td>
-          <td>$11.28</td>
-          <td><span class="badge call">CALL</span></td>
-          <td>MODERATE</td>
-          <td>71.1</td>
-          <td>$11.24</td>
-          <td>$10.44</td>
-          <td>$12.12</td>
-          <td><span class="score-bull">3</span> / <span class="score-bear">1</span></td>
-        </tr>
-        <tr>
-          <td class="tc">RIOT</td>
-          <td>$18.61</td>
-          <td class="pos">▲ 1.20%</td>
-          <td>$19.07</td>
-          <td>$18.26</td>
-          <td><span class="badge call">CALL</span></td>
-          <td>MODERATE</td>
-          <td>67.7</td>
-          <td>$17.75</td>
-          <td>$16.7</td>
-          <td>$18.91</td>
-          <td><span class="score-bull">3</span> / <span class="score-bear">0</span></td>
-        </tr>
-        <tr>
-          <td class="tc">HIMS</td>
-          <td>$30.56</td>
-          <td class="pos">▲ 8.45%</td>
-          <td>$31.33</td>
-          <td>$28.9</td>
-          <td><span class="badge call">CALL</span></td>
-          <td>MODERATE</td>
-          <td>73.1</td>
-          <td>$27.66</td>
-          <td>$25.1</td>
-          <td>$31.33</td>
-          <td><span class="score-bull">3</span> / <span class="score-bear">1</span></td>
-        </tr>
-        <tr>
-          <td class="tc">IWM</td>
-          <td>$276.65</td>
-          <td class="pos">▲ 0.40%</td>
-          <td>$278.13</td>
-          <td>$274.23</td>
-          <td><span class="badge call">CALL</span></td>
-          <td>MODERATE</td>
-          <td>75.3</td>
-          <td>$272.7</td>
-          <td>$266.21</td>
-          <td>$278.01</td>
-          <td><span class="score-bull">3</span> / <span class="score-bear">1</span></td>
-        </tr>
-        <tr>
-          <td class="tc">DOW</td>
-          <td>$38.66</td>
-          <td class="pos">▲ 0.03%</td>
-          <td>$39.49</td>
-          <td>$37.93</td>
+          <td>MODERATE</td><td>52.3</td>
+          <td>$18.48</td><td>$18.05</td><td>$22.0</td>
+          <td><span class="gb">3</span>/<span class="rb">0</span></td>
+        </tr><tr>
+          <td class="tc">RGTI</td><td>$16.39</td>
+          <td class="neg">▼ 3.36%</td>
+          <td>$16.63</td><td>$16.05</td>
           <td><span class="badge wait">WAIT</span></td>
-          <td>NO CLEAR</td>
-          <td>50.5</td>
-          <td>$38.5</td>
-          <td>$38.46</td>
-          <td>-</td>
-          <td><span class="score-bull">1</span> / <span class="score-bear">2</span></td>
-        </tr>
-        <tr>
-          <td class="tc">TSLL</td>
-          <td>$12.17</td>
-          <td class="pos">▲ 1.59%</td>
-          <td>$12.58</td>
-          <td>$11.82</td>
+          <td>NO CLEAR</td><td>42.6</td>
+          <td>$17.17</td><td>$16.79</td><td>-</td>
+          <td><span class="gb">1</span>/<span class="rb">2</span></td>
+        </tr><tr>
+          <td class="tc">NVDA</td><td>$213.17</td>
+          <td class="neg">▼ 2.55%</td>
+          <td>$214.73</td><td>$208.2</td>
           <td><span class="badge call">CALL</span></td>
-          <td>MODERATE</td>
-          <td>47.1</td>
-          <td>$12.44</td>
-          <td>$12.4</td>
-          <td>$17.3</td>
-          <td><span class="score-bull">3</span> / <span class="score-bear">0</span></td>
-        </tr>
-        <tr>
-          <td class="tc">SQQQ</td>
-          <td>$52.5</td>
-          <td class="neg">▼ 4.04%</td>
-          <td>$54.43</td>
-          <td>$52.37</td>
+          <td>MODERATE</td><td>74.4</td>
+          <td>$205.0</td><td>$196.8</td><td>$214.73</td>
+          <td><span class="gb">3</span>/<span class="rb">1</span></td>
+        </tr><tr>
+          <td class="tc">MARA</td><td>$11.02</td>
+          <td class="neg">▼ 1.61%</td>
+          <td>$11.03</td><td>$10.6</td>
+          <td><span class="badge call">CALL</span></td>
+          <td>MODERATE</td><td>53.3</td>
+          <td>$11.19</td><td>$10.56</td><td>$12.12</td>
+          <td><span class="gb">3</span>/<span class="rb">0</span></td>
+        </tr><tr>
+          <td class="tc">RIOT</td><td>$16.57</td>
+          <td class="neg">▼ 9.90%</td>
+          <td>$17.57</td><td>$16.5</td>
+          <td><span class="badge call">CALL</span></td>
+          <td>MODERATE</td><td>42.9</td>
+          <td>$17.6</td><td>$16.83</td><td>$18.91</td>
+          <td><span class="gb">3</span>/<span class="rb">0</span></td>
+        </tr><tr>
+          <td class="tc">HIMS</td><td>$27.91</td>
+          <td class="neg">▼ 6.03%</td>
+          <td>$28.83</td><td>$27.65</td>
+          <td><span class="badge call">CALL</span></td>
+          <td>MODERATE</td><td>55.9</td>
+          <td>$27.98</td><td>$25.74</td><td>$31.33</td>
+          <td><span class="gb">3</span>/<span class="rb">0</span></td>
+        </tr><tr>
+          <td class="tc">IWM</td><td>$273.91</td>
+          <td class="neg">▼ 1.37%</td>
+          <td>$276.97</td><td>$272.92</td>
+          <td><span class="badge call">CALL</span></td>
+          <td>MODERATE</td><td>61.0</td>
+          <td>$273.65</td><td>$267.89</td><td>$278.13</td>
+          <td><span class="gb">3</span>/<span class="rb">0</span></td>
+        </tr><tr>
+          <td class="tc">DOW</td><td>$38.01</td>
+          <td class="neg">▼ 0.21%</td>
+          <td>$39.1</td><td>$37.85</td>
           <td><span class="badge put">PUT</span></td>
-          <td>MODERATE</td>
-          <td>18.1</td>
-          <td>$57.95</td>
-          <td>$63.58</td>
-          <td>$52.37</td>
-          <td><span class="score-bull">1</span> / <span class="score-bear">3</span></td>
-        </tr>
-        <tr>
-          <td class="tc">BBAI</td>
-          <td>$3.7</td>
-          <td class="neg">▼ 2.12%</td>
-          <td>$3.82</td>
-          <td>$3.61</td>
+          <td>MODERATE</td><td>45.9</td>
+          <td>$38.34</td><td>$38.38</td><td>$28.87</td>
+          <td><span class="gb">0</span>/<span class="rb">3</span></td>
+        </tr><tr>
+          <td class="tc">TSLL</td><td>$12.14</td>
+          <td class="neg">▼ 0.98%</td>
+          <td>$12.55</td><td>$11.92</td>
+          <td><span class="badge wait">WAIT</span></td>
+          <td>NO CLEAR</td><td>46.6</td>
+          <td>$12.36</td><td>$12.37</td><td>-</td>
+          <td><span class="gb">2</span>/<span class="rb">1</span></td>
+        </tr><tr>
+          <td class="tc">SQQQ</td><td>$54.05</td>
+          <td class="pos">▲ 3.52%</td>
+          <td>$54.96</td><td>$53.58</td>
+          <td><span class="badge put">PUT</span></td>
+          <td>MODERATE</td><td>28.0</td>
+          <td>$56.29</td><td>$61.71</td><td>$53.58</td>
+          <td><span class="gb">1</span>/<span class="rb">3</span></td>
+        </tr><tr>
+          <td class="tc">BBAI</td><td>$4.12</td>
+          <td class="pos">▲ 10.16%</td>
+          <td>$4.16</td><td>$3.64</td>
           <td><span class="badge call">CALL</span></td>
-          <td>MODERATE</td>
-          <td>50.4</td>
-          <td>$3.73</td>
-          <td>$3.68</td>
-          <td>$5.07</td>
-          <td><span class="score-bull">3</span> / <span class="score-bear">0</span></td>
-        </tr>
-        <tr>
-          <td class="tc">CONY</td>
-          <td>$28.2</td>
-          <td class="pos">▲ 0.18%</td>
-          <td>$28.42</td>
-          <td>$27.82</td>
+          <td>MODERATE</td><td>69.5</td>
+          <td>$3.81</td><td>$3.73</td><td>$4.92</td>
+          <td><span class="gb">3</span>/<span class="rb">0</span></td>
+        </tr><tr>
+          <td class="tc">CONY</td><td>$27.59</td>
+          <td class="neg">▼ 1.18%</td>
+          <td>$27.73</td><td>$26.92</td>
           <td><span class="badge call">CALL</span></td>
-          <td>MODERATE</td>
-          <td>58.5</td>
-          <td>$27.74</td>
-          <td>$26.98</td>
-          <td>$29.43</td>
-          <td><span class="score-bull">3</span> / <span class="score-bear">0</span></td>
-        </tr>
-        <tr>
-          <td class="tc">WULF</td>
-          <td>$20.01</td>
-          <td class="neg">▼ 2.86%</td>
-          <td>$21.6</td>
-          <td>$19.84</td>
+          <td>MODERATE</td><td>52.1</td>
+          <td>$27.73</td><td>$27.11</td><td>$29.43</td>
+          <td><span class="gb">3</span>/<span class="rb">0</span></td>
+        </tr><tr>
+          <td class="tc">WULF</td><td>$20.8</td>
+          <td class="neg">▼ 3.84%</td>
+          <td>$21.3</td><td>$20.24</td>
           <td><span class="badge call">CALL</span></td>
-          <td>MODERATE</td>
-          <td>58.5</td>
-          <td>$19.84</td>
-          <td>$18.7</td>
-          <td>$21.34</td>
-          <td><span class="score-bull">3</span> / <span class="score-bear">0</span></td>
-        </tr>
-        </tbody>
-      </table>
+          <td>MODERATE</td><td>61.1</td>
+          <td>$20.28</td><td>$19.13</td><td>$21.46</td>
+          <td><span class="gb">3</span>/<span class="rb">0</span></td>
+        </tr></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <!-- DISCIPLINE -->
-  <div class="card">
-    <div class="card-header">Discipline Rules</div>
-    <div class="rules">
-      <div class="rule">No confirmation = no trade</div>
-      <div class="rule">Max 3 open positions at once</div>
-      <div class="rule">Never risk more than 5% per trade</div>
-      <div class="rule">WAIT is a valid signal — not a failure</div>
-      <div class="rule">Check SPY direction FIRST before any trade</div>
-      <div class="rule">Define your stop BEFORE entering</div>
-      <div class="rule">Do not chase extended RSI (above 75)</div>
+  <!-- JOURNAL -->
+  <div class="panel" id="panel-journal">
+    <div class="card">
+      <div class="card-header">Recent Trades</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Ticker</th><th>Contract</th><th>Entry</th>
+            <th>Exit</th><th>P&L%</th><th>Result</th><th>Lesson</th></tr></thead>
+          <tbody><tr><td colspan="8" class="empty">No trades logged yet. Run journal_entry.py to log trades.</td></tr></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
+  <!-- STATS -->
+  <div class="panel" id="panel-stats">
+    <div class="card">
+      <div class="card-header">Performance Overview</div>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="stat-label">Total Trades</div>
+          <div class="stat-value accent">0</div></div>
+        <div class="stat-box"><div class="stat-label">Wins</div>
+          <div class="stat-value green">0</div></div>
+        <div class="stat-box"><div class="stat-label">Losses</div>
+          <div class="stat-value red">0</div></div>
+        <div class="stat-box"><div class="stat-label">Win Rate</div>
+          <div class="stat-value" style="color:#ff4455">0%</div></div>
+        <div class="stat-box"><div class="stat-label">Avg Win</div>
+          <div class="stat-value green">+0%</div></div>
+        <div class="stat-box"><div class="stat-label">Avg Loss</div>
+          <div class="stat-value red">0%</div></div>
+        <div class="stat-box"><div class="stat-label">R/R Ratio</div>
+          <div class="stat-value accent">0:1</div></div>
+        <div class="stat-box"><div class="stat-label">Streak</div>
+          <div class="stat-value" style="font-size:14px"></div></div>
+      </div>
+      <div class="wr-wrap">
+        <div class="wr-bg"><div class="wr-fill"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stat-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="stat-box"><div class="stat-label">Best Trade</div>
+          <div class="stat-value green" style="font-size:14px">-</div></div>
+        <div class="stat-box"><div class="stat-label">Worst Trade</div>
+          <div class="stat-value red" style="font-size:14px">-</div></div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header">By Ticker</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Ticker</th><th>Trades</th><th>Wins</th><th>Win%</th><th>Avg P&L</th></tr></thead>
+            <tbody><tr><td colspan="5" class="empty">No data yet</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">By Month</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Month</th><th>Trades</th><th>Win%</th><th>Avg P&L</th></tr></thead>
+            <tbody><tr><td colspan="4" class="empty">No monthly data yet</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RULES -->
+  <div class="panel" id="panel-rules">
+    <div class="card">
+      <div class="card-header">Discipline Rules</div>
+      <div class="rules">
+        <div class="rule">No confirmation = no trade</div>
+        <div class="rule">Max 3 open positions at once</div>
+        <div class="rule">Never risk more than 5% per trade</div>
+        <div class="rule">WAIT is a valid signal — not a failure</div>
+        <div class="rule">Check SPY direction FIRST before any trade</div>
+        <div class="rule">Define your stop BEFORE entering</div>
+        <div class="rule">Do not chase extended RSI (above 75)</div>
+        <div class="rule">Losses are tuition — log every trade</div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div class="footer">
-  AI Trading Assistant — Updated: Sunday, April 26, 2026  08:32 PM — Run push_dashboard.py to refresh
-</div>
+<div class="footer">AI Trading Assistant — Tuesday, April 28, 2026  07:29 PM — python push_dashboard.py to refresh</div>
 
 <script>
-// Build signal summary counts
-const rows = document.querySelectorAll('#watchlist-tbody tr');
-let calls = 0, puts = 0, waits = 0, strong = 0;
+function showTab(name) {
+  ['signals','journal','stats','rules'].forEach((t,i) => {
+    document.querySelectorAll('.tab')[i].classList.toggle('active', t===name);
+    document.getElementById('panel-'+t).classList.toggle('active', t===name);
+  });
+}
+// Signal summary
+const rows = document.querySelectorAll('tbody tr');
+let c=0,p=0,w=0,s=0;
 rows.forEach(r => {
-  const sig = r.querySelector('.badge');
-  if (!sig) return;
-  if (sig.classList.contains('call')) calls++;
-  else if (sig.classList.contains('put')) puts++;
-  else waits++;
-  if (r.cells[6] && r.cells[6].textContent.includes('STRONG')) strong++;
+  const b = r.querySelector('.badge');
+  if(!b) return;
+  if(b.classList.contains('call'))c++;
+  else if(b.classList.contains('put'))p++;
+  else w++;
+  const cells = r.querySelectorAll('td');
+  if(cells[6] && cells[6].textContent.includes('STRONG')) s++;
 });
-const bar = document.getElementById('summary-bar');
-bar.innerHTML = `
-  <div class="sum-item"><div class="sum-label">CALL</div>
-    <div class="sum-val" style="color:var(--green)">${calls}</div></div>
-  <div class="sum-item"><div class="sum-label">PUT</div>
-    <div class="sum-val" style="color:var(--red)">${puts}</div></div>
-  <div class="sum-item"><div class="sum-label">WAIT</div>
-    <div class="sum-val" style="color:var(--yellow)">${waits}</div></div>
-  <div class="sum-item"><div class="sum-label">STRONG</div>
-    <div class="sum-val" style="color:var(--accent)">${strong}</div></div>
-  <div class="sum-item"><div class="sum-label">TICKERS</div>
-    <div class="sum-val">15</div></div>
+document.getElementById('sum-bar').innerHTML = `
+  <div class="sum-item"><div class="sum-label">CALL</div><div class="sum-val" style="color:var(--green)">${c}</div></div>
+  <div class="sum-item"><div class="sum-label">PUT</div><div class="sum-val" style="color:var(--red)">${p}</div></div>
+  <div class="sum-item"><div class="sum-label">WAIT</div><div class="sum-val" style="color:var(--yellow)">${w}</div></div>
+  <div class="sum-item"><div class="sum-label">STRONG</div><div class="sum-val" style="color:var(--accent)">${s}</div></div>
 `;
 </script>
 </body>
